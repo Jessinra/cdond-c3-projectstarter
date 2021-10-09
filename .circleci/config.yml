@@ -36,6 +36,21 @@ commands:
             fi
             
 jobs:
+  test-install-tar:
+    docker:
+      - image: amazon/aws-cli
+    steps:
+      - run:
+          name: install tar
+          command: |
+            yum update -y
+            yum install tar -y
+            echo "hello" > hello.txt
+      - persist_to_workspace:
+          root: ~/
+          paths:
+            - hello.txt
+
   build-frontend:
     docker:
       - image: circleci/node:13.8.0
@@ -121,29 +136,30 @@ jobs:
           command: |
             aws cloudformation deploy \
               --template-file .circleci/files/backend.yml \
-              --tags project=udapeople-$CIRCLE_WORKFLOW_ID \
-              --stack-name udapeople-be-$CIRCLE_WORKFLOW_ID \
-              --parameter-overrides ID=$PROJECT_ID 
+              --tags project=udapeople-${CIRCLE_SHA1:0:7} \
+              --stack-name udapeople-be-${CIRCLE_SHA1:0:7} \
+              --parameter-overrides ID=${CIRCLE_SHA1:0:7}
       - run:
           name: Ensure front-end infrastructure exist
           command: |
             aws cloudformation deploy \
               --template-file .circleci/files/frontend.yml \
-              --tags project=udapeople-$CIRCLE_WORKFLOW_ID \
-              --stack-name udapeople-fe-$CIRCLE_WORKFLOW_ID \
-              --parameter-overrides ID=$PROJECT_ID 
+              --tags project=udapeople-${CIRCLE_SHA1:0:7} \
+              --stack-name udapeople-fe-${CIRCLE_SHA1:0:7} \
+              --parameter-overrides ID=${CIRCLE_SHA1:0:7}
       - run:
           name: Add back-end ip to ansible inventory
           command: |
             aws ec2 describe-instances \
               --query 'Reservations[*].Instances[*].PublicIpAddress' \
-              --filters "Name=tag:project,Values=udapeople-$CIRCLE_WORKFLOW_ID" \
+              --filters "Name=tag:project,Values=udapeople-${CIRCLE_SHA1:0:7}" \
               --output text >> .circleci/ansible/inventory.txt
             cat .circleci/ansible/inventory.txt
       - run:
           name: install tar
           command: |
-            sudo apt-get install -y tar
+            apt-get 
+            apt-get install -y tar
       - persist_to_workspace:
           root: ~/
           paths:
@@ -287,18 +303,19 @@ jobs:
 workflows:
   default:
     jobs:
-      - build-frontend
-      - build-backend
-      - scan-frontend:
-          requires: [build-frontend]
-      - scan-backend:
-          requires: [build-backend]
-      - test-frontend:
-          requires: [build-frontend, scan-frontend]
-      - test-backend:
-          requires: [build-backend, scan-backend]
-      - deploy-infrastructure:
-          requires: [test-frontend, test-backend, scan-frontend, scan-backend]
+      - test-install-tar
+      # - build-frontend
+      # - build-backend
+      # - scan-frontend:
+      #     requires: [build-frontend]
+      # - scan-backend:
+      #     requires: [build-backend]
+      # - test-frontend:
+      #     requires: [build-frontend, scan-frontend]
+      # - test-backend:
+      #     requires: [build-backend, scan-backend]
+      # - deploy-infrastructure:
+      #     requires: [test-frontend, test-backend, scan-frontend, scan-backend]
       # - configure-infrastructure:
       #     requires: [deploy-infrastructure]
       # - run-migrations:
