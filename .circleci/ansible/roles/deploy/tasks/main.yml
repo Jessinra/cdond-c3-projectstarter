@@ -2,16 +2,12 @@
 - name: "copy all file"
   copy:
     src: backend
-    dest: ~/udapeople/backend
+    dest: ~/udapeople
     backup: yes
 
 - name: Install BE packages based on package.json.
   become: true
   command: "npm i --prefix udapeople/backend"
-
-- name: Audit fix.
-  become: true
-  command: "npm audit fix --prefix udapeople/backend"
 
 - name: "build backend server"
   become: true
@@ -19,7 +15,7 @@
   environment:
     ENVIRONMENT: production
     TYPEORM_CONNECTION: postgres
-    TYPEORM_ENTITIES: ./src/modules/domain/**/*.entity.ts
+    TYPEORM_ENTITIES: "./src/modules/domain/**/*.entity.ts"
     TYPEORM_HOST: udapeople.cac1ecrqianq.us-east-1.rds.amazonaws.com
     TYPEORM_PORT: 5432
     TYPEORM_USERNAME: postgres
@@ -32,7 +28,7 @@
   environment:
     ENVIRONMENT: production
     TYPEORM_CONNECTION: postgres
-    TYPEORM_ENTITIES: ./src/modules/domain/**/*.entity.ts
+    TYPEORM_ENTITIES: "./src/modules/domain/**/*.entity.ts"
     TYPEORM_HOST: udapeople.cac1ecrqianq.us-east-1.rds.amazonaws.com
     TYPEORM_PORT: 5432
     TYPEORM_USERNAME: postgres
