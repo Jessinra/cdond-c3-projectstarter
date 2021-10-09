@@ -253,16 +253,20 @@ jobs:
           command: |
             apk add --update curl
       - run:
-          name: Get backend url
+          name: Get backend & frontend url
           # command: |
           #   curl -H "token: $MEMSTASH_TOKEN" --request GET https://api.memstash.io/values/${CIRCLE_WORKFLOW_ID}-host > host.temp
+          #   export BACKEND_URL=$(cat host.temp)
+          #   export FRONTEND_URL=http://udapeople-${CIRCLE_SHA1:0:7}.s3-website-us-east-1.amazonaws.com
           command: |
             echo "3.83.140.110" > host.temp
-            export BACKEND_IP=$(cat host.temp)
+            export BACKEND_URL=$(cat host.temp)
+            export FRONTEND_URL=http://udapeople-4b77c2b.s3-website-us-east-1.amazonaws.com
       - run:
           name: Backend smoke test.
           command: |
-            if curl -s ${URL} | grep "ok"
+            echo $BACKEND_URL
+            if curl -s ${BACKEND_URL} | grep "ok"
             then
               return 0
             else
@@ -271,6 +275,7 @@ jobs:
       - run:
           name: Frontend smoke test.
           command: |
+            echo $FRONTEND_URL
             if curl -s ${URL} | grep "Welcome"
             then
               return 0
