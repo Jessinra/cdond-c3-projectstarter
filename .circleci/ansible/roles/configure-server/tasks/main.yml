@@ -1,0 +1,49 @@
+---
+- name: "apt update"
+  become: true
+  apt:
+    update_cache: yes
+
+- name: "apt upgrade"
+  become: true
+  apt:
+    upgrade: "yes"
+
+- name: "apt auto remove dependency"
+  become: true
+  apt:
+    autoremove: yes
+
+- name: "apt install node and npm"
+  become: true
+  apt:
+    name:
+      - nodejs
+      - npm
+    state: latest
+    update_cache: yes
+
+- name: "npm install pm2"
+  become: true
+  npm:
+    name: pm2
+    global: yes
+    production: yes
+    state: present
+
+- name: "git clone repo"
+  become: true
+  git:
+    repo: "https://github.com/Jessinra/cdond-c3-projectstarter.git"
+    dest: "./udapeople"
+    clone: yes
+
+- name: "change dir to backend"
+  become: true
+  shell: "cd udapeople/backend"
+
+- name: "run backend server"
+  shell: |
+    "npm i"
+    "npm run build"
+    "npm run start"
