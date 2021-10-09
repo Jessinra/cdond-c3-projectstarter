@@ -238,7 +238,7 @@ jobs:
             cp -r ./backend .circleci/ansible/roles/deploy/files
             cd .circleci/ansible
             echo "3.83.140.110" >> inventory.txt
-            ansible-playbook -i inventory.txt deploy-backend.yml
+            ansible-playbook -i inventory.txt -v deploy-backend.yml
           # command: |
           #   cp -r ./backend .circleci/ansible/roles/deploy/files
           #   cd .circleci/ansible
