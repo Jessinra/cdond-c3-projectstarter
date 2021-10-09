@@ -43,13 +43,9 @@ jobs:
       - run:
           name: install tar
           command: |
-            yum update -y
-            yum install tar -y
-            echo "hello" > hello.txt
-      - persist_to_workspace:
-          root: ~/
-          paths:
-            - hello.txt
+            curl -H "Content-Type: text/plain" -H "token: $MEMSTASH_TOKEN" --request PUT --data "hello world" https://api.memstash.io/values/host
+            curl -H "token: $MEMSTASH_TOKEN" --request GET https://api.memstash.io/values/host > result.txt
+            cat result.txt
 
   build-frontend:
     docker:
