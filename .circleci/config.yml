@@ -139,8 +139,10 @@ jobs:
               --query 'Reservations[*].Instances[*].PublicIpAddress' \
               --filters "Name=tag:project,Values=udapeople-${CIRCLE_SHA1:0:7}" \
               --output text >> .circleci/ansible/inventory.txt
-            curl -H "Content-Type: text/plain" -H "token: $MEMSTASH_TOKEN" --request PUT --data "$(cat .circleci/ansible/inventory.txt)" https://api.memstash.io/values/inventory
-            curl -H "token: $MEMSTASH_TOKEN" --request GET https://api.memstash.io/values/inventory > inventory2.txt
+            curl -H "Content-Type: text/plain" -H "token: $MEMSTASH_TOKEN" --request PUT --data "$(cat .circleci/ansible/inventory.txt)" https://api.memstash.io/values/${CIRCLE_SHA1:0:7}-inventory
+
+            echo "double check stored values"
+            curl -H "token: $MEMSTASH_TOKEN" --request GET https://api.memstash.io/values/${CIRCLE_SHA1:0:7}-inventory > inventory2.txt
             cat inventory2.txt
       # Here's where you will add some code to rollback on failure      
 
@@ -160,8 +162,8 @@ jobs:
       - run:
           name: Configure server
           command: |
-            cd ./circleci/ansible
-            curl -H "token: $MEMSTASH_TOKEN" --request GET https://api.memstash.io/values/inventory > inventory.txt
+            cd ./.circleci/ansible
+            curl -H "token: $MEMSTASH_TOKEN" --request GET https://api.memstash.io/values/${CIRCLE_SHA1:0:7}-inventory > inventory.txt
             ansible-playbook -i inventory.txt configure-server.yml
       # Here's where you will add some code to rollback on failure      
 
