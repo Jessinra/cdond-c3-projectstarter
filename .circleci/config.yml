@@ -36,17 +36,6 @@ commands:
             fi
             
 jobs:
-  test-install-tar:
-    docker:
-      - image: amazon/aws-cli
-    steps:
-      - run:
-          name: install tar
-          command: |
-            curl -H "Content-Type: text/plain" -H "token: $MEMSTASH_TOKEN" --request PUT --data "hello world" https://api.memstash.io/values/host
-            curl -H "token: $MEMSTASH_TOKEN" --request GET https://api.memstash.io/values/host > result.txt
-            cat result.txt
-
   build-frontend:
     docker:
       - image: circleci/node:13.8.0
@@ -144,22 +133,15 @@ jobs:
               --stack-name udapeople-fe-${CIRCLE_SHA1:0:7} \
               --parameter-overrides ID=${CIRCLE_SHA1:0:7}
       - run:
-          name: Add back-end ip to ansible inventory
+          name: Add back-end ip to ansible inventory and store it to memcache
           command: |
             aws ec2 describe-instances \
               --query 'Reservations[*].Instances[*].PublicIpAddress' \
               --filters "Name=tag:project,Values=udapeople-${CIRCLE_SHA1:0:7}" \
               --output text >> .circleci/ansible/inventory.txt
-            cat .circleci/ansible/inventory.txt
-      - run:
-          name: install tar
-          command: |
-            apt-get 
-            apt-get install -y tar
-      - persist_to_workspace:
-          root: ~/
-          paths:
-            - project/.circleci/ansible/inventory.txt
+            curl -H "Content-Type: text/plain" -H "token: $MEMSTASH_TOKEN" --request PUT --data "$(cat .circleci/ansible/inventory.txt)" https://api.memstash.io/values/inventory
+            curl -H "token: $MEMSTASH_TOKEN" --request GET https://api.memstash.io/values/inventory > inventory2.txt
+            cat inventory2.txt
       # Here's where you will add some code to rollback on failure      
 
   configure-infrastructure:
