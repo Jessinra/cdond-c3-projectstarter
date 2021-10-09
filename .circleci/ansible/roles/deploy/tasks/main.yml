@@ -6,9 +6,12 @@
     backup: yes
 
 - name: Install BE packages based on package.json.
-  npm:
-    path: ~/udapeople/backend
-    state: present
+  become: true
+  command: "npm i --prefix udapeople/backend"
+
+- name: Audit fix.
+  become: true
+  command: "npm audit fix --prefix udapeople/backend"
 
 - name: "build backend server"
   become: true

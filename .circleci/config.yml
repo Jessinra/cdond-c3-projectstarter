@@ -237,37 +237,32 @@ jobs:
           command: |
             cp -r ./backend .circleci/ansible/roles/deploy/files
             cd .circleci/ansible
-            echo "3.83.140.110" >> inventory.txt
+            curl -H "token: $MEMSTASH_TOKEN" --request GET https://api.memstash.io/values/${CIRCLE_WORKFLOW_ID}-inventory > inventory.txt
             ansible-playbook -i inventory.txt -v deploy-backend.yml
-          # command: |
-          #   cp -r ./backend .circleci/ansible/roles/deploy/files
-          #   cd .circleci/ansible
-          #   curl -H "token: $MEMSTASH_TOKEN" --request GET https://api.memstash.io/values/${CIRCLE_WORKFLOW_ID}-inventory > inventory.txt
-          #   ansible-playbook -i inventory.txt deploy-backend.yml
       # Here's where you will add some code to rollback on failure  
 
-  # smoke-test:
-  #   docker:
-  #     # Lightweight Docker image 
-  #   steps:
-  #     # Checkout code from git
-  #     - run:
-  #         name: Install dependencies
-  #         command: |
-  #           # your code here
-  #     - run:
-  #         name: Get backend url
-  #         command: |
-  #           # your code here
-  #     - run:
-  #         name: Backend smoke test.
-  #         command: |
-  #           # your code here
-  #     - run:
-  #         name: Frontend smoke test.
-  #         command: |
-  #           # your code here
-  #     # Here's where you will add some code to rollback on failure  
+  smoke-test:
+    docker:
+      # Lightweight Docker image 
+    steps:
+      # Checkout code from git
+      - run:
+          name: Install dependencies
+          command: |
+            # your code here
+      - run:
+          name: Get backend url
+          command: |
+            # your code here
+      - run:
+          name: Backend smoke test.
+          command: |
+            # your code here
+      - run:
+          name: Frontend smoke test.
+          command: |
+            # your code here
+      # Here's where you will add some code to rollback on failure  
 
   # cloudfront-update:
   #   docker:
