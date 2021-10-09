@@ -303,7 +303,8 @@ workflows:
     jobs:
       # - build-frontend
       - build-backend
-      - run-migrations
+      - run-migrations:
+          requires: [build-backend]
       # - scan-frontend:
       #     requires: [build-frontend]
       # - scan-backend:
