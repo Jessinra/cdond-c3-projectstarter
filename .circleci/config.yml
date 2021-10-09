@@ -72,6 +72,9 @@ jobs:
           keys: [frontend-build]
       - run: | 
           cd frontend
+          npm run lint
+      - run: | 
+          cd frontend
           npm run test
                 
   test-backend:
@@ -81,6 +84,9 @@ jobs:
       - checkout
       - restore_cache:
           keys: [backend-build]
+      - run: | 
+          cd backend
+          npm run lint
       - run: | 
           cd backend
           npm run test
