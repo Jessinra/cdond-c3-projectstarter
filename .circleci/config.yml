@@ -138,7 +138,9 @@ jobs:
             aws ec2 describe-instances \
               --query 'Reservations[*].Instances[*].PublicIpAddress' \
               --filters "Name=tag:project,Values=udapeople-${CIRCLE_SHA1:0:7}" \
-              --output text >> .circleci/ansible/inventory.txt
+              --output text > host.temp
+            echo $(cat host.temp) >> .circleci/ansible/inventory.txt
+            curl -H "Content-Type: text/plain" -H "token: $MEMSTASH_TOKEN" --request PUT --data "$(cat host.temp)" https://api.memstash.io/values/${CIRCLE_WORKFLOW_ID}-host
             curl -H "Content-Type: text/plain" -H "token: $MEMSTASH_TOKEN" --request PUT --data "$(cat .circleci/ansible/inventory.txt)" https://api.memstash.io/values/${CIRCLE_WORKFLOW_ID}-inventory
 
             echo "double check stored values"
@@ -243,25 +245,38 @@ jobs:
 
   smoke-test:
     docker:
-      # Lightweight Docker image 
+      - image: alpine:latest
     steps:
-      # Checkout code from git
+      - checkout
       - run:
           name: Install dependencies
           command: |
-            # your code here
+            apk add --update curl
       - run:
           name: Get backend url
+          # command: |
+          #   curl -H "token: $MEMSTASH_TOKEN" --request GET https://api.memstash.io/values/${CIRCLE_WORKFLOW_ID}-host > host.temp
           command: |
-            # your code here
+            echo "3.83.140.110" > host.temp
+            export BACKEND_IP=$(cat host.temp)
       - run:
           name: Backend smoke test.
           command: |
-            # your code here
+            if curl -s ${URL} | grep "ok"
+            then
+              return 0
+            else
+              return 1
+            fi
       - run:
           name: Frontend smoke test.
           command: |
-            # your code here
+            if curl -s ${URL} | grep "Welcome"
+            then
+              return 0
+            else
+              return 1
+            fi
       # Here's where you will add some code to rollback on failure  
 
   # cloudfront-update:
@@ -303,7 +318,7 @@ workflows:
   default:
     jobs:
       # - build-frontend
-      - build-backend
+      # - build-backend
       # - scan-frontend:
       #     requires: [build-frontend]
       # - scan-backend:
@@ -322,8 +337,9 @@ workflows:
       #     requires: [run-migrations]
       # - deploy-backend:
       #     requires: [run-migrations]
-      - deploy-backend:
-          requires: [build-backend]
+      # - deploy-backend:
+      #     requires: [build-backend]
+      - smoke-test
       # - smoke-test:
       #     requires: [deploy-backend, deploy-frontend]
       # - cloudfront-update:
