@@ -199,11 +199,19 @@ jobs:
           command: |
             aws ec2 describe-instances \
               --query 'Reservations[*].Instances[*].PublicIpAddress' \
-              --filters "Name=tag:project,Values=udapeople-${CIRCLE_SHA1:0:7}" \
+              --filters "Name=tag:project,Values=udapeople-4b77c2b" \
               --output text >> be-url.temp
             export BACKEND_IP=$(cat be-url.temp)
             export API_URL="http://${BACKEND_IP}:3030"
             echo "${API_URL}"
+      #     command: |
+      #       aws ec2 describe-instances \
+      #         --query 'Reservations[*].Instances[*].PublicIpAddress' \
+      #         --filters "Name=tag:project,Values=udapeople-${CIRCLE_SHA1:0:7}" \
+      #         --output text >> be-url.temp
+      #       export BACKEND_IP=$(cat be-url.temp)
+      #       export API_URL="http://${BACKEND_IP}:3030"
+      #       echo "${API_URL}"
       - run:
           name: Install dependencies
           command: |
@@ -214,7 +222,11 @@ jobs:
           name: Deploy frontend objects
           command: |
             cd frontend
-            aws s3 sync ./dist s3://udapeople-${CIRCLE_SHA1:0:7} --delete
+            aws s3 sync ./dist s3://udapeople-4b77c2b --delete
+          # command: |
+          #   cd frontend
+          #   aws s3 sync ./dist s3://udapeople-${CIRCLE_SHA1:0:7} --delete
+
       # Here's where you will add some code to rollback on failure      
                     
   deploy-backend:
@@ -222,6 +234,8 @@ jobs:
       - image: python:3.7-alpine3.11
     steps:
       - checkout
+      - restore_cache:
+          keys: [backend-build]
       - add_ssh_keys:
           fingerprints: ["$SSH_FINGERPRINT"]
       - attach_workspace:
@@ -235,8 +249,12 @@ jobs:
           name: Deploy backend
           command: |
             cd ./.circleci/ansible
-            curl -H "token: $MEMSTASH_TOKEN" --request GET https://api.memstash.io/values/${CIRCLE_WORKFLOW_ID}-inventory > inventory.txt
+            echo "172.31.81.87" > inventory.txt
             ansible-playbook -i inventory.txt deploy-backend.yml
+          # command: |
+          #   cd ./.circleci/ansible
+          #   curl -H "token: $MEMSTASH_TOKEN" --request GET https://api.memstash.io/values/${CIRCLE_WORKFLOW_ID}-inventory > inventory.txt
+          #   ansible-playbook -i inventory.txt deploy-backend.yml
       # Here's where you will add some code to rollback on failure  
 
   # smoke-test:
@@ -302,20 +320,20 @@ workflows:
     jobs:
       - build-frontend
       - build-backend
-      - scan-frontend:
-          requires: [build-frontend]
-      - scan-backend:
-          requires: [build-backend]
-      - test-frontend:
-          requires: [build-frontend, scan-frontend]
-      - test-backend:
-          requires: [build-backend, scan-backend]
-      - deploy-infrastructure:
-          requires: [test-frontend, test-backend, scan-frontend, scan-backend]
-      - configure-infrastructure:
-          requires: [deploy-infrastructure]
-      - run-migrations:
-          requires: [configure-infrastructure]
+      # - scan-frontend:
+      #     requires: [build-frontend]
+      # - scan-backend:
+      #     requires: [build-backend]
+      # - test-frontend:
+      #     requires: [build-frontend, scan-frontend]
+      # - test-backend:
+      #     requires: [build-backend, scan-backend]
+      # - deploy-infrastructure:
+      #     requires: [test-frontend, test-backend, scan-frontend, scan-backend]
+      # - configure-infrastructure:
+      #     requires: [deploy-infrastructure]
+      # - run-migrations:
+      #     requires: [configure-infrastructure]
       - deploy-frontend:
           requires: [run-migrations]
       - deploy-backend:
