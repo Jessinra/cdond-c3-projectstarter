@@ -140,6 +140,10 @@ jobs:
               --filters "Name=tag:project,Values=udapeople-$CIRCLE_WORKFLOW_ID" \
               --output text >> .circleci/ansible/inventory.txt
             cat .circleci/ansible/inventory.txt
+      - run:
+          name: install tar
+          command: |
+            sudo apt-get install -y tar
       - persist_to_workspace:
           root: ~/
           paths:
