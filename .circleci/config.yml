@@ -181,7 +181,6 @@ jobs:
             cd backend
             npm run migrations > migrations.log
             cat migrations.log
-            grep "has been executed successfully" migrations.log
       - run:
           name: Send migration results to memstash
           command: |
