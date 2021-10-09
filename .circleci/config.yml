@@ -94,6 +94,7 @@ jobs:
           keys: [frontend-build]
       - run: | 
           cd frontend
+          npm i
           npm audit fix --audit-level=critical
 
   scan-backend:
