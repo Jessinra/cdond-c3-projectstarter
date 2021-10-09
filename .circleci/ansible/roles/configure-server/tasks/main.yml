@@ -35,15 +35,24 @@
   become: true
   git:
     repo: "https://github.com/Jessinra/cdond-c3-projectstarter.git"
-    dest: "./udapeople"
+    dest: "~/udapeople"
     clone: yes
 
-- name: "change dir to backend"
+- name: Install BE packages based on package.json.
+  npm:
+    path: ~/udapeople/backend
+    state: present
+
+- name: "build backend server"
   become: true
-  shell: "cd udapeople/backend"
+  command: "npm run build"
+  args:
+    chdir: ~/udapeople/backend
 
 - name: "run backend server"
-  shell: |
-    "npm i"
-    "npm run build"
-    "npm run start"
+  become: true
+  command: "npm run start"
+  async: 45
+  poll: 0
+  args:
+    chdir: ~/udapeople/backend
