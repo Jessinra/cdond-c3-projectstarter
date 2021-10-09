@@ -121,23 +121,23 @@ jobs:
           command: |
             aws cloudformation deploy \
               --template-file .circleci/files/backend.yml \
-              --tags project=udapeople-$CIRCLE_WORFLOW_ID \
-              --stack-name udapeople-be-$CIRCLE_WORFLOW_ID \
+              --tags project=udapeople-$CIRCLE_WORKFLOW_ID \
+              --stack-name udapeople-be-$CIRCLE_WORKFLOW_ID \
               --parameter-overrides ID=$PROJECT_ID 
       - run:
           name: Ensure front-end infrastructure exist
           command: |
             aws cloudformation deploy \
               --template-file .circleci/files/frontend.yml \
-              --tags project=udapeople-$CIRCLE_WORFLOW_ID \
-              --stack-name udapeople-fe-$CIRCLE_WORFLOW_ID \
+              --tags project=udapeople-$CIRCLE_WORKFLOW_ID \
+              --stack-name udapeople-fe-$CIRCLE_WORKFLOW_ID \
               --parameter-overrides ID=$PROJECT_ID 
       - run:
           name: Add back-end ip to ansible inventory
           command: |
             aws ec2 describe-instances \
               --query 'Reservations[*].Instances[*].PublicIpAddress' \
-              --filters "Name=tag:project,Values=udapeople-$CIRCLE_WORFLOW_ID" \
+              --filters "Name=tag:project,Values=udapeople-$CIRCLE_WORKFLOW_ID" \
               --output text >> .circleci/ansible/inventory.txt
             cat .circleci/ansible/inventory.txt
       - persist_to_workspace:
@@ -146,24 +146,26 @@ jobs:
             - project/.circleci/ansible/inventory.txt
       # Here's where you will add some code to rollback on failure      
 
-  # configure-infrastructure:
-  #   docker:
-  #     # Docker image here that supports Ansible
-  #   steps:
-  #     # Checkout code from git
-  #     # Add ssh keys with fingerprint
-  #     # attach workspace
-  #     - run:
-  #         name: Install dependencies
-  #         command: |
-  #           # Your code here
-  #           exit 1
-  #     - run:
-  #         name: Configure server
-  #         command: |
-  #           # Your code here
-  #           exit 1
-  #     # Here's where you will add some code to rollback on failure      
+  configure-infrastructure:
+    docker:
+      - image: python:3.7-alpine3.11
+    steps:
+      - checkout
+      - add_ssh_keys:
+          fingerprints: ["$SSH_FINGERPRINT"]
+      - attach_workspace:
+          at: ~/
+      - run:
+          name: Install dependencies
+          command: |
+            apk add --update ansible 
+            exit 1
+      - run:
+          name: Configure server
+          command: |
+            cd ./circleci/ansible
+            ansible-playbook -i inventory.txt deploy-backend.yml
+      # Here's where you will add some code to rollback on failure      
 
   # run-migrations:
   #   docker:
