@@ -5,10 +5,26 @@
     dest: ~/udapeople/backend
     backup: yes
 
+- name: Install BE packages based on package.json.
+  npm:
+    path: ~/udapeople/backend
+    state: present
+
+- name: "build backend server"
+  become: true
+  command: "npm run build --prefix udapeople/backend"
+
 - name: "run backend server"
   become: true
-  command: "npm run start:prod"
+  command: "npm run start:prod --prefix udapeople/backend"
+  environment:
+    ENVIRONMENT: production
+    TYPEORM_CONNECTION: postgres
+    TYPEORM_ENTITIES: ./src/modules/domain/**/*.entity.ts
+    TYPEORM_HOST: udapeople.cac1ecrqianq.us-east-1.rds.amazonaws.com
+    TYPEORM_PORT: 5432
+    TYPEORM_USERNAME: postgres
+    TYPEORM_PASSWORD: postgres
+    TYPEORM_DATABASE: postgres
   async: 45
   poll: 0
-  args:
-    chdir: ~/udapeople/backend

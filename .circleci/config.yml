@@ -199,19 +199,11 @@ jobs:
           command: |
             aws ec2 describe-instances \
               --query 'Reservations[*].Instances[*].PublicIpAddress' \
-              --filters "Name=tag:project,Values=udapeople-4b77c2b" \
+              --filters "Name=tag:project,Values=udapeople-${CIRCLE_SHA1:0:7}" \
               --output text >> be-url.temp
             export BACKEND_IP=$(cat be-url.temp)
             export API_URL="https://${BACKEND_IP}:3030"
             echo "${API_URL}"
-      #     command: |
-      #       aws ec2 describe-instances \
-      #         --query 'Reservations[*].Instances[*].PublicIpAddress' \
-      #         --filters "Name=tag:project,Values=udapeople-${CIRCLE_SHA1:0:7}" \
-      #         --output text >> be-url.temp
-      #       export BACKEND_IP=$(cat be-url.temp)
-      #       export API_URL="http://${BACKEND_IP}:3030"
-      #       echo "${API_URL}"
       - run:
           name: Install dependencies
           command: |
@@ -235,8 +227,6 @@ jobs:
           keys: [backend-build]
       - add_ssh_keys:
           fingerprints: ["$SSH_FINGERPRINT"]
-      - attach_workspace:
-          at: ~/
       - run:
           name: Install dependencies
           command: |
@@ -245,14 +235,12 @@ jobs:
       - run:
           name: Deploy backend
           command: |
-            mkdir .circleci/ansible/roles/deploy/files/backend
-            cp -r ./backend .circleci/ansible/roles/deploy/files/backend
+            cp -r ./backend .circleci/ansible/roles/deploy/files
             cd .circleci/ansible
-            echo "3.83.140.110" > inventory.txt
+            echo "3.83.140.110" >> inventory.txt
             ansible-playbook -i inventory.txt deploy-backend.yml
           # command: |
-          #   mkdir .circleci/ansible/roles/deploy/files/backend
-          #   cp -r ./backend .circleci/ansible/roles/deploy/files/backend
+          #   cp -r ./backend .circleci/ansible/roles/deploy/files
           #   cd .circleci/ansible
           #   curl -H "token: $MEMSTASH_TOKEN" --request GET https://api.memstash.io/values/${CIRCLE_WORKFLOW_ID}-inventory > inventory.txt
           #   ansible-playbook -i inventory.txt deploy-backend.yml
