@@ -61,6 +61,7 @@ jobs:
           cd backend
           sudo npm install
           sudo npm install -g npm-install-peers
+          sudo npm install -g @nestjs/cli
           npm run build
           ls -a
       - persist_to_workspace:
