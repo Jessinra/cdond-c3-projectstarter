@@ -22,4 +22,4 @@
 
 - name: "run backend server"
   become: true
-  command: "pm2 start npm -- start:prod"
+  command: "pm2 start main.js -f"
