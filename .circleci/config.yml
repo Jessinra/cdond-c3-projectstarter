@@ -263,12 +263,16 @@ jobs:
       - run:
           name: Get backend & frontend url
           command: |
-            curl -H "token: $MEMSTASH_TOKEN" --request GET https://api.memstash.io/values/${CIRCLE_WORKFLOW_ID}-host > be_url.temp
-            echo "http://udapeople-${CIRCLE_SHA1:0:7}.s3-website-us-east-1.amazonaws.com" > fe_url.temp
+            curl -H "token: $MEMSTASH_TOKEN" --request GET https://api.memstash.io/values/${CIRCLE_WORKFLOW_ID}-host > be_url.tmp
+            echo "http://udapeople-${CIRCLE_SHA1:0:7}.s3-website-us-east-1.amazonaws.com" > fe_url.tmp
+
+            cat be_url.tmp
+            cat fe_url.tmp
       - run:
           name: Backend smoke test.
           command: |
-            if curl -s $(cat be_url.temp):3030/api/status | grep "ok"
+            curl -s $(cat be_url.tmp):3030/api/status
+            if curl -s $(cat be_url.tmp):3030/api/status | grep "ok"
             then
               return 0
             else
@@ -277,7 +281,7 @@ jobs:
       - run:
           name: Frontend smoke test.
           command: |
-            if curl -s $(cat fe_url.temp) | grep "Welcome"
+            if curl -s $(cat fe_url.tmp) | grep "Welcome"
             then
               return 0
             else
@@ -340,16 +344,16 @@ workflows:
     jobs:
       - build-frontend
       - build-backend
-      - scan-frontend:
-          requires: [build-frontend]
-      - scan-backend:
-          requires: [build-backend]
-      - test-frontend:
-          requires: [build-frontend, scan-frontend]
-      - test-backend:
-          requires: [build-backend, scan-backend]
+      # - scan-frontend:
+      #     requires: [build-frontend]
+      # - scan-backend:
+      #     requires: [build-backend]
+      # - test-frontend:
+      #     requires: [build-frontend, scan-frontend]
+      # - test-backend:
+      #     requires: [build-backend, scan-backend]
       - deploy-infrastructure:
-          requires: [test-frontend, test-backend, scan-frontend, scan-backend]
+          requires: [build-frontend, build-backend]
           filters:
             branches:
               only: [master]
