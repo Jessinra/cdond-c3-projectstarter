@@ -215,7 +215,7 @@ jobs:
           name: Deploy frontend objects
           command: |
             export BACKEND_IP=$(cat be-url.temp)
-            export API_URL="https://${BACKEND_IP}:3030"
+            export API_URL="http://${BACKEND_IP}:3030"
             echo "${API_URL}"
 
             cd frontend
