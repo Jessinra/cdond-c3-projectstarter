@@ -245,6 +245,7 @@ jobs:
           name: Deploy frontend objects
           command: |
             cd frontend
+            npm install
             npm run build
             aws s3 sync ./dist s3://udapeople-4b77c2b --delete
       - destroy-environment
@@ -370,7 +371,7 @@ jobs:
 workflows:
   default:
     jobs:
-      - build-frontend
+      # - build-frontend
       - build-backend
       # - scan-frontend:
       #     requires: [build-frontend]
@@ -390,8 +391,6 @@ workflows:
           # requires: [run-migrations]
       # - deploy-backend:
       #     requires: [run-migrations]
-      - deploy-frontend:
-          requires: [build-frontend]
       - deploy-backend:
           requires: [build-backend]
       # - smoke-test
