@@ -1,7 +1,7 @@
 ---
 - name: "copy all file"
   copy:
-    src: backend
+    src: backend/
     dest: ~/
     backup: yes
 
