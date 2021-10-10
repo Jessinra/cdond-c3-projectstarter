@@ -336,7 +336,7 @@ jobs:
           command: |
             curl -H "Content-Type: text/plain" -H "token: $MEMSTASH_TOKEN" --request PUT --data "${CIRCLE_SHA1:0:7}" https://api.memstash.io/values/latest-version
             curl -H "token: $MEMSTASH_TOKEN" --request GET https://api.memstash.io/values/latest-version
-            echo "congratulations, version ${CIRCLE_SHA1:0:7} is up and running!""
+            echo "congratulations, version ${CIRCLE_SHA1:0:7} is up and running!"
 
 workflows:
   default:
