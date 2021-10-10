@@ -43,7 +43,8 @@ jobs:
           keys: [cache-frontend-build]
       - run: | 
           cd frontend
-          npm install -g npm-install-peers
+          sudo npm install
+          sudo npm install -g npm-install-peers
           npm run build
       - save_cache:
           paths: [frontend/node_modules]
@@ -58,7 +59,8 @@ jobs:
           keys: [cache-backend-build]
       - run: |
           cd backend
-          npm install -g npm-install-peers
+          sudo npm install
+          sudo npm install -g npm-install-peers
           npm run build
           ls -a
       - persist_to_workspace:
@@ -100,7 +102,7 @@ jobs:
           keys: [cache-frontend-build]
       - run: | 
           cd frontend
-          npm i
+          npm install
           npm audit fix --audit-level=critical
 
   scan-backend:
@@ -237,14 +239,12 @@ jobs:
       #     name: Deploy frontend objects
       #     command: |
       #       cd frontend
-      #       npm i
       #       npm run build
       #       aws s3 sync ./dist s3://udapeople-${CIRCLE_SHA1:0:7} --delete
       - run:
           name: Deploy frontend objects
           command: |
             cd frontend
-            npm i
             npm run build
             aws s3 sync ./dist s3://udapeople-4b77c2b --delete
       - destroy-environment
