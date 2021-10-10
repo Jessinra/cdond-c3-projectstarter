@@ -40,14 +40,14 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: [frontend-build]
+          keys: [cache-frontend-build]
       - run: | 
           cd frontend
-          npm i
+          npm install -g npm-install-peers
           npm run build
       - save_cache:
           paths: [frontend/node_modules]
-          key: frontend-build
+          key: cache-frontend-build
 
   build-backend:
     docker:
@@ -55,10 +55,10 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: [backend-build]
+          keys: [cache-backend-build]
       - run: |
           cd backend
-          npm i
+          npm install -g npm-install-peers
           npm run build
           ls -a
       - persist_to_workspace:
@@ -67,7 +67,7 @@ jobs:
             - project/backend/dist
       - save_cache:
           paths: [backend/node_modules]
-          key: backend-build
+          key: cache-backend-build
 
   test-frontend:
     docker:
@@ -75,7 +75,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: [frontend-build]
+          keys: [cache-frontend-build]
       - run: | 
           cd frontend
           npm run test
@@ -86,7 +86,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: [backend-build]
+          keys: [cache-backend-build]
       - run: | 
           cd backend
           npm run test
@@ -97,7 +97,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: [frontend-build]
+          keys: [cache-frontend-build]
       - run: | 
           cd frontend
           npm i
@@ -109,7 +109,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: [backend-build]
+          keys: [cache-backend-build]
       - run: | 
           cd backend
           npm audit fix --audit-level=critical
@@ -188,7 +188,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: [backend-build]
+          keys: [cache-backend-build]
       - run:
           name: Run migrations
           command: |
@@ -207,13 +207,23 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: [frontend-build]
+          keys: [cache-frontend-build]
+      # - run:
+      #     name: Get backend url
+      #     command: |
+      #       aws ec2 describe-instances \
+      #         --query 'Reservations[*].Instances[*].PublicIpAddress' \
+      #         --filters "Name=tag:project,Values=udapeople-${CIRCLE_SHA1:0:7}" \
+      #         --output text >> be-url.temp
+      #       export BACKEND_IP=$(cat be-url.temp)
+      #       export API_URL="https://${BACKEND_IP}:3030"
+      #       echo "${API_URL}"
       - run:
           name: Get backend url
           command: |
             aws ec2 describe-instances \
               --query 'Reservations[*].Instances[*].PublicIpAddress' \
-              --filters "Name=tag:project,Values=udapeople-${CIRCLE_SHA1:0:7}" \
+              --filters "Name=tag:project,Values=udapeople-4b77c2b" \
               --output text >> be-url.temp
             export BACKEND_IP=$(cat be-url.temp)
             export API_URL="https://${BACKEND_IP}:3030"
@@ -223,13 +233,20 @@ jobs:
           command: |
             curl -sL https://rpm.nodesource.com/setup_14.x | bash -
             yum -y install nodejs
+      # - run:
+      #     name: Deploy frontend objects
+      #     command: |
+      #       cd frontend
+      #       npm i
+      #       npm run build
+      #       aws s3 sync ./dist s3://udapeople-${CIRCLE_SHA1:0:7} --delete
       - run:
           name: Deploy frontend objects
           command: |
             cd frontend
             npm i
             npm run build
-            aws s3 sync ./dist s3://udapeople-${CIRCLE_SHA1:0:7} --delete
+            aws s3 sync ./dist s3://udapeople-4b77c2b --delete
       - destroy-environment
       - revert-migrations   
                     
@@ -239,7 +256,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: [backend-build]
+          keys: [cache-backend-build]
       - attach_workspace:
           at: ~/
       - add_ssh_keys:
@@ -353,7 +370,7 @@ jobs:
 workflows:
   default:
     jobs:
-      # - build-frontend
+      - build-frontend
       - build-backend
       # - scan-frontend:
       #     requires: [build-frontend]
@@ -370,9 +387,11 @@ workflows:
       # - run-migrations:
       #     requires: [configure-infrastructure]
       # - deploy-frontend:
-      #     requires: [run-migrations]
+          # requires: [run-migrations]
       # - deploy-backend:
       #     requires: [run-migrations]
+      - deploy-frontend:
+          requires: [build-frontend]
       - deploy-backend:
           requires: [build-backend]
       # - smoke-test
