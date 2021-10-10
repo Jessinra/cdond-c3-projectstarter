@@ -1,25 +1,46 @@
 ---
-- name: "copy all file"
-  copy:
-    src: dist/
-    dest: ~/
-    backup: yes
+- name: "clean up server"
+  become: true
+  command: "sudo rm -rf *"
 
-# - name: Install BE packages based on package.json.
-#   npm:
-#     path: ~/
-#     state: present
+- name: "git clone repo"
+  become: true
+  git:
+    repo: "https://github.com/Jessinra/cdond-c3-projectstarter.git"
+    dest: "~/udapeople"
+    clone: yes
 
-# - name: "build backend server"
-#   become: true
-#   command: "npm run build"
+# - name: "copy all file"
+#   copy:
+#     src: backend/
+#     dest: ~/
+#     backup: yes
 
-# - name: "run backend server"
-#   become: true
-#   command: "npm run start:prod"
-#   async: 45
-#   poll: 0
+- name: Install BE packages based on package.json.
+  npm:
+    path: ~/udapeople/backend
+    state: present
+
+- name: "install peers dependency"
+  become: true
+  command: "npm install -g npm-install-peers"
+  args:
+    chdir: "~/udapeople/backend"
+
+- name: "build backend server"
+  become: true
+  command: "npm run build"
+  args:
+    chdir: "~/udapeople/backend"
 
 - name: "run backend server"
   become: true
-  command: "pm2 start main.js -f"
+  command: "npm run start"
+  args:
+    chdir: "~/udapeople/backend"
+  async: 45
+  poll: 0
+
+# - name: "run backend server"
+#   become: true
+#   command: "pm2 start main.js -f"

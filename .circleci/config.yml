@@ -276,9 +276,9 @@ jobs:
           #   ansible-playbook -i inventory.txt -v deploy-backend.yml
           command: |
             ls -a ./backend
-            cp -r ./backend/dist .circleci/ansible/roles/deploy/files
+            cp -r ./backend .circleci/ansible/roles/deploy/files
             cd .circleci/ansible
-            echo "3.82.155.163" >> inventory.txt
+            echo "ec2-3-89-74-77.compute-1.amazonaws.com" >> inventory.txt
             ansible-playbook -i inventory.txt -v deploy-backend.yml
       - destroy-environment
       - revert-migrations
