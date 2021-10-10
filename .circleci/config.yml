@@ -348,25 +348,44 @@ jobs:
       - destroy-environment
       - revert-migrations
 
-# cleanup:
-#     docker:
-#       # Docker image here
-#     steps:
-#       # Checkout code from git
-#       - run:
-#           name: Get old stack workflow id
-#           command: |
-#             # your code here
-#             export OldWorkflowID="the id here"
-#             export STACKS=[] #put the list of stacks here
-#       - run:
-#           name: Remove old stacks and files
-#           command: |
-#             if [[ "${STACKS[@]}" =~ "${OldWorkflowID}" ]]
-#             then
-#               # your code here
-#             fi
-            
+  cleanup:
+    docker:
+      - image: amazon/aws-cli
+    steps:
+      - checkout
+      - run:
+          name: Get old stack workflow id
+          command: |
+            export OldWorkflowID=$(aws cloudformation list-exports --query "Exports[?Name==\`WorkflowID\`].Value" --no-paginate --output text)
+            export STACKS=($(aws cloudformation list-stacks --query "StackSummaries[*].StackName" --stack-status-filter CREATE_COMPLETE --no-paginate --output text)) 
+            echo "previous version: $OldWorkflowID"
+            echo "relevant stacks: ${STACKS[@]}"
+
+            echo "$OldWorkflowID" > oldWorkflowID.temp
+            echo "${STACKS[@]}" > stacks.temp
+      - run:
+          name: Remove old stacks and files
+          # command: |
+          #   if [[ "${STACKS[@]}" =~ "${OldWorkflowID}" ]]
+          #   then
+          #     aws cloudformation delete-stack --stack-name "udapeople-be-$OldWorkflowID"
+          #     echo "deleted old backend stack: udapeople-be-$OldWorkflowID"
+
+          #     aws cloudformation delete-stack --stack-name "udapeople-fe-$OldWorkflowID"
+          #     echo "deleted old frontend stack: udapeople-fe-$OldWorkflowID"
+
+          #     aws s3 rm "s3://udapeople-$OldWorkflowID" --recursive)
+          #     echo "deleted old frontend s3 files: s3://udapeople-$OldWorkflowID"
+          #   fi
+          command: |
+            export OldWorkflowID=$(cat oldWorkflowID.temp)
+            export STACKS=($(cat stacks.temp))
+            if [[ "${STACKS[@]}" =~ "${OldWorkflowID}" ]]
+            then
+              echo "deleted old backend stack: udapeople-be-$OldWorkflowID"
+              echo "deleted old frontend stack: udapeople-fe-$OldWorkflowID"
+              echo "deleted old frontend s3 files: s3://udapeople-$OldWorkflowID"
+            fi
 
 workflows:
   default:
@@ -396,5 +415,5 @@ workflows:
       #     requires: [deploy-backend, deploy-frontend]
       - cloudfront-update:
           requires: [smoke-test]
-      # - cleanup:
-      #     requires: [cloudfront-update]
+      - cleanup:
+          requires: [cloudfront-update]
