@@ -368,13 +368,13 @@ workflows:
           filters:
             branches:
               only: [master]
-      - deploy-frontend:
+      - deploy-backend:
           requires: [run-migrations]
           filters:
             branches:
               only: [master]
-      - deploy-backend:
-          requires: [run-migrations]
+      - deploy-frontend:
+          requires: [run-migrations, deploy-backend]
           filters:
             branches:
               only: [master]
