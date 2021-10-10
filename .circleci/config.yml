@@ -12,9 +12,8 @@ commands:
           when: on_fail
           command: |
             echo "triggering rollback"
-          # command: |
-          #   aws cloudformation delete-stack --stack-name udapeople-fe-${CIRCLE_SHA1:0:7}
-          #   aws cloudformation delete-stack --stack-name udapeople-be-${CIRCLE_SHA1:0:7}
+            aws cloudformation delete-stack --stack-name udapeople-fe-${CIRCLE_SHA1:0:7}
+            aws cloudformation delete-stack --stack-name udapeople-be-${CIRCLE_SHA1:0:7}
 
   revert-migrations:
     description: Revert the last migration if successfully run in the current workflow.  
@@ -24,14 +23,13 @@ commands:
           when: on_fail
           command: |
             echo "triggering migration rollback"
-          # command: |
-          #   SUCCESS = $(curl -H "token: $MEMSTASH_TOKEN" --request GET https://api.memstash.io/values/${CIRCLE_WORKFLOW_ID}-migration-success)
-          #   if(( $SUCCESS==1 )); 
-          #   then
-          #     cd ~/project/backend
-          #     npm install
-          #     npm run migrations:revert
-          #   fi
+            SUCCESS = $(curl -H "token: $MEMSTASH_TOKEN" --request GET https://api.memstash.io/values/${CIRCLE_WORKFLOW_ID}-migration-success)
+            if(( $SUCCESS==1 )); 
+            then
+              cd ~/project/backend
+              npm install
+              npm run migrations:revert
+            fi
 
 jobs:
   build-frontend:
@@ -62,7 +60,6 @@ jobs:
           sudo npm install
           sudo npm install -g npm-install-peers
           npm run build
-          ls -a
       - persist_to_workspace:
           root: ~/
           paths:
@@ -149,12 +146,7 @@ jobs:
             curl -H "Content-Type: text/plain" -H "token: $MEMSTASH_TOKEN" --request PUT --data "$(cat .circleci/ansible/inventory.txt)" https://api.memstash.io/values/${CIRCLE_WORKFLOW_ID}-inventory
 
             echo "double check stored values"
-            curl -H "token: $MEMSTASH_TOKEN" --request GET https://api.memstash.io/values/${CIRCLE_WORKFLOW_ID}-inventory > inventory2.txt
-            cat inventory2.txt
-      - persist_to_workspace:
-          root: ~/
-          paths:
-            - project/.circleci/ansible/inventory.txt
+            curl -H "token: $MEMSTASH_TOKEN" --request GET https://api.memstash.io/values/${CIRCLE_WORKFLOW_ID}-inventory
       - destroy-environment  
 
   configure-infrastructure:
@@ -171,16 +163,11 @@ jobs:
           command: |
             apk add --update curl 
             apk add --update ansible
-      # - run:
-      #     name: Configure server
-      #     command: |
-      #       cd ./.circleci/ansible
-      #       curl -H "token: $MEMSTASH_TOKEN" --request GET https://api.memstash.io/values/${CIRCLE_WORKFLOW_ID}-inventory > inventory.txt
-      #       ansible-playbook -i inventory.txt configure-server.yml
       - run:
           name: Configure server
           command: |
             cd ./.circleci/ansible
+            curl -H "token: $MEMSTASH_TOKEN" --request GET https://api.memstash.io/values/${CIRCLE_WORKFLOW_ID}-inventory > inventory.txt
             ansible-playbook -i inventory.txt configure-server.yml
       - destroy-environment
 
@@ -196,11 +183,13 @@ jobs:
           command: |
             cd backend
             npm run migrations > migrations.log
-            grep "has been executed successfully" migrations.log || true
       - run:
           name: Send migration results to memstash
           command: |
-            curl -H "Content-Type: text/plain" -H "token: $MEMSTASH_TOKEN" --request PUT --data "true" https://api.memstash.io/values/${CIRCLE_WORKFLOW_ID}-migration-success
+            if grep "has been executed successfully" migrations.log
+            then
+              curl -H "Content-Type: text/plain" -H "token: $MEMSTASH_TOKEN" --request PUT --data "true" https://api.memstash.io/values/${CIRCLE_WORKFLOW_ID}-migration-success
+            fi
       - destroy-environment
 
   deploy-frontend:
@@ -210,22 +199,12 @@ jobs:
       - checkout
       - restore_cache:
           keys: [cache-frontend-build]
-      # - run:
-      #     name: Get backend url
-      #     command: |
-      #       aws ec2 describe-instances \
-      #         --query 'Reservations[*].Instances[*].PublicIpAddress' \
-      #         --filters "Name=tag:project,Values=udapeople-${CIRCLE_SHA1:0:7}" \
-      #         --output text >> be-url.temp
-      #       export BACKEND_IP=$(cat be-url.temp)
-      #       export API_URL="https://${BACKEND_IP}:3030"
-      #       echo "${API_URL}"
       - run:
           name: Get backend url
           command: |
             aws ec2 describe-instances \
               --query 'Reservations[*].Instances[*].PublicIpAddress' \
-              --filters "Name=tag:project,Values=udapeople-4b77c2b" \
+              --filters "Name=tag:project,Values=udapeople-${CIRCLE_SHA1:0:7}" \
               --output text >> be-url.temp
             export BACKEND_IP=$(cat be-url.temp)
             export API_URL="https://${BACKEND_IP}:3030"
@@ -235,19 +214,13 @@ jobs:
           command: |
             curl -sL https://rpm.nodesource.com/setup_14.x | bash -
             yum -y install nodejs
-      # - run:
-      #     name: Deploy frontend objects
-      #     command: |
-      #       cd frontend
-      #       npm run build
-      #       aws s3 sync ./dist s3://udapeople-${CIRCLE_SHA1:0:7} --delete
       - run:
           name: Deploy frontend objects
           command: |
             cd frontend
             npm install
             npm run build
-            aws s3 sync ./dist s3://udapeople-4b77c2b --delete
+            aws s3 sync ./dist s3://udapeople-${CIRCLE_SHA1:0:7} --delete
       - destroy-environment
       - revert-migrations   
                     
@@ -269,16 +242,11 @@ jobs:
             apk add --update ansible 
       - run:
           name: Deploy backend
-          # command: |
-          #   cp -r ./backend .circleci/ansible/roles/deploy/files
-          #   cd .circleci/ansible
-          #   curl -H "token: $MEMSTASH_TOKEN" --request GET https://api.memstash.io/values/${CIRCLE_WORKFLOW_ID}-inventory > inventory.txt
-          #   ansible-playbook -i inventory.txt -v deploy-backend.yml
           command: |
             ls -a ./backend
             cp -r ./backend .circleci/ansible/roles/deploy/files
             cd .circleci/ansible
-            echo "ec2-3-89-74-77.compute-1.amazonaws.com" >> inventory.txt
+            curl -H "token: $MEMSTASH_TOKEN" --request GET https://api.memstash.io/values/${CIRCLE_WORKFLOW_ID}-inventory > inventory.txt
             ansible-playbook -i inventory.txt -v deploy-backend.yml
       - destroy-environment
       - revert-migrations
@@ -294,13 +262,9 @@ jobs:
             apk add --update curl
       - run:
           name: Get backend & frontend url
-          # command: |
-          #   curl -H "token: $MEMSTASH_TOKEN" --request GET https://api.memstash.io/values/${CIRCLE_WORKFLOW_ID}-host > be_url.temp
-          #   echo "http://udapeople-${CIRCLE_SHA1:0:7}.s3-website-us-east-1.amazonaws.com" > fe_url.temp
-          #   export BACKEND_URL=$(cat host.temp)
           command: |
-            echo "ec2-3-89-74-77.compute-1.amazonaws.com" > be_url.temp
-            echo "http://udapeople-4b77c2b.s3-website-us-east-1.amazonaws.com" > fe_url.temp
+            curl -H "token: $MEMSTASH_TOKEN" --request GET https://api.memstash.io/values/${CIRCLE_WORKFLOW_ID}-host > be_url.temp
+            echo "http://udapeople-${CIRCLE_SHA1:0:7}.s3-website-us-east-1.amazonaws.com" > fe_url.temp
       - run:
           name: Backend smoke test.
           command: |
@@ -327,24 +291,14 @@ jobs:
       - image: amazon/aws-cli
     steps:
       - checkout
-      # - run:
-      #     name: Install dependencies
-      #     command: |
-      #       # your code here
       - run:
           name: Update cloudfront distribution
-          # command: |
-          #   aws cloudformation deploy \
-          #     --template-file .circleci/files/cloudfront.yml \
-          #     --tags project=udapeople \
-          #     --stack-name udapeople-cloudfront \
-          #     --parameter-overrides WorkflowID=${CIRCLE_SHA1:0:7}
           command: |
             aws cloudformation deploy \
               --template-file .circleci/files/cloudfront.yml \
               --tags project=udapeople \
               --stack-name udapeople-cloudfront \
-              --parameter-overrides WorkflowID=4b77c2b
+              --parameter-overrides WorkflowID=${CIRCLE_SHA1:0:7}
       - destroy-environment
       - revert-migrations
 
@@ -365,25 +319,19 @@ jobs:
             echo "${STACKS[@]}" > stacks.temp
       - run:
           name: Remove old stacks and files
-          # command: |
-          #   if [[ "${STACKS[@]}" =~ "${OldWorkflowID}" ]]
-          #   then
-          #     aws cloudformation delete-stack --stack-name "udapeople-be-$OldWorkflowID"
-          #     echo "deleted old backend stack: udapeople-be-$OldWorkflowID"
-
-          #     aws cloudformation delete-stack --stack-name "udapeople-fe-$OldWorkflowID"
-          #     echo "deleted old frontend stack: udapeople-fe-$OldWorkflowID"
-
-          #     aws s3 rm "s3://udapeople-$OldWorkflowID" --recursive)
-          #     echo "deleted old frontend s3 files: s3://udapeople-$OldWorkflowID"
-          #   fi
           command: |
             export OldWorkflowID=$(cat oldWorkflowID.temp)
             export STACKS=($(cat stacks.temp))
+
             if [[ "${STACKS[@]}" =~ "${OldWorkflowID}" ]]
             then
+              aws cloudformation delete-stack --stack-name "udapeople-be-${OldWorkflowID}"
               echo "deleted old backend stack: udapeople-be-$OldWorkflowID"
+
+              aws cloudformation delete-stack --stack-name "udapeople-fe-${OldWorkflowID}"
               echo "deleted old frontend stack: udapeople-fe-$OldWorkflowID"
+
+              aws s3 rm "s3://udapeople-${OldWorkflowID}" --recursive)
               echo "deleted old frontend s3 files: s3://udapeople-$OldWorkflowID"
             fi
 
