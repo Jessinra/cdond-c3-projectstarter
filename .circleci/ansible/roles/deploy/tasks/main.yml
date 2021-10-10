@@ -2,37 +2,24 @@
 - name: "copy all file"
   copy:
     src: backend
-    dest: ~/udapeople
+    dest: ~/
     backup: yes
 
 - name: Install BE packages based on package.json.
-  become: true
-  command: "npm i --prefix udapeople/backend"
+  npm:
+    path: ~/
+    state: present
 
 - name: "build backend server"
   become: true
-  command: "npm run build --prefix udapeople/backend"
-  environment:
-    ENVIRONMENT: production
-    TYPEORM_CONNECTION: postgres
-    TYPEORM_ENTITIES: "./src/modules/domain/**/*.entity.ts"
-    TYPEORM_HOST: udapeople.cac1ecrqianq.us-east-1.rds.amazonaws.com
-    TYPEORM_PORT: 5432
-    TYPEORM_USERNAME: postgres
-    TYPEORM_PASSWORD: postgres
-    TYPEORM_DATABASE: postgres
+  command: "npm run build"
+
+# - name: "run backend server"
+#   become: true
+#   command: "npm run start:prod"
+#   async: 45
+#   poll: 0
 
 - name: "run backend server"
   become: true
-  command: "npm run start:prod --prefix udapeople/backend"
-  environment:
-    ENVIRONMENT: production
-    TYPEORM_CONNECTION: postgres
-    TYPEORM_ENTITIES: "./src/modules/domain/**/*.entity.ts"
-    TYPEORM_HOST: udapeople.cac1ecrqianq.us-east-1.rds.amazonaws.com
-    TYPEORM_PORT: 5432
-    TYPEORM_USERNAME: postgres
-    TYPEORM_PASSWORD: postgres
-    TYPEORM_DATABASE: postgres
-  async: 45
-  poll: 0
+  command: "pm2 start npm -- start:prod"
